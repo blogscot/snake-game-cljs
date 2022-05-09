@@ -1,43 +1,47 @@
 (ns blogscot.app
-  (:require [blogscot.snake :refer [move! draw]]))
+  (:require [blogscot.snake :refer [draw direction move! snake]]))
 
 (def canvas (js/document.querySelector "canvas"))
 (def ctx (.getContext canvas "2d"))
-(def width 600)
-(def height 400)
+(def canvas-dimensions {:width 600 :height 400})
 
-(def snake (atom {:x 0 :y 0 :dx 1 :dy 0}))
+(def bounded-move! (move! canvas-dimensions))
 
 (defn log [arg]
   (js/console.log (clj->js arg)))
 
-(defn draw-canvas [width height]
+(defn draw-canvas [{:keys [width height]}]
   (doto canvas
     (#(set! (.-width %) width))
     (#(set! (.-height %) height))
     (#(set! (.-style %) "background-color: #333"))))
 
+(defn clear-canvas []
+  (let [{:keys [width height]} canvas-dimensions]
+    (.clearRect ctx 0 0 width height)))
+
 (defn game-loop []
-  (move! snake)
-  (.clearRect ctx 0 0 width height)
+  (bounded-move! snake)
+  (clear-canvas)
   (draw ctx @snake))
 
 (defn handle-keypress [e]
   (case (-> e .-key)
-    "ArrowUp"    (swap! snake assoc :dx 0  :dy -1)
-    "ArrowDown"  (swap! snake assoc :dx 0  :dy 1)
-    "ArrowLeft"  (swap! snake assoc :dx -1 :dy 0)
-    "ArrowRight" (swap! snake assoc :dx 1  :dy 0)))
+    "ArrowUp"    (direction {:dx 0  :dy -1})
+    "ArrowDown"  (direction {:dx 0  :dy 1})
+    "ArrowLeft"  (direction {:dx -1 :dy 0})
+    "ArrowRight" (direction {:dx 1  :dy 0})
+    nil))
 
 (defn game []
-  (draw-canvas width height)
+  (draw-canvas canvas-dimensions)
 
   (js/document.addEventListener
    "keyup"
    handle-keypress)
 
   (game-loop)
-  (js/setInterval (fn [] (game-loop)) 100))
+  (js/setInterval (fn [] (game-loop)) 50))
 
 (defn ^:export init []
   (game))
