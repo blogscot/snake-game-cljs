@@ -2,11 +2,11 @@
 
 (def game-dimensions {:width 60 :height 40 :size 10})
 
-(def snake (atom {:x 0 :y 0 :dx 1 :dy 0}))
+(def snake (atom {:body (list [0 0]) :dx 1 :dy 0}))
 (def apple (atom {:x 0 :y 0 :color "#fff" :visible true}))
 
-(defn log [& args]
-  (js/console.log (clj->js args)))
+(defn log [arg]
+  (js/console.log (clj->js arg)))
 
 (defn point->rect
   "Converts a [x y] point into a screen rectangle 
@@ -15,8 +15,8 @@
   (let [block-size (:size game-dimensions)]
     [(* x block-size) (* y block-size) block-size block-size]))
 
-(defn apple-eaten? []
-  (= ((juxt :x :y) @snake) ((juxt :x :y) @apple)))
+(defn apple-eaten? [snake-position]
+  (= snake-position ((juxt :x :y) @apple)))
 
 (defn generate-apple [{:keys [width height]}]
   (let [x (rand-int (dec width))
@@ -24,21 +24,26 @@
         color (rand-nth ["red" "green"])]
     (swap! apple assoc :x x :y y :color color :visible true)))
 
-(defn update-positions [x y]
-  (swap! snake assoc :x x :y y)
-  (when (apple-eaten?)
-    (swap! apple assoc :visible false)
-    (js/setTimeout #(generate-apple game-dimensions) (rand-int 3000))))
+(defn update-positions [[new-x new-y]]
+  (if (apple-eaten? [new-x new-y])
+    ;; add apple block position as head
+    (do (swap! snake update :body conj ((juxt :x :y) @apple))
+        (swap! apple assoc :visible false)
+        (js/setTimeout #(generate-apple game-dimensions) (rand-int 3000)))
+    ;; add new block as head and remove last block
+    (let [body (:body @snake)]
+      (swap! snake assoc :body (butlast (conj body [new-x new-y]))))))
 
 (defn move! [{:keys [width height]}]
   (fn [snake]
-    (let [{:keys [x y dx dy]} @snake]
+    (let [{:keys [body dx dy]} @snake
+          [[x y]] body]
       (when-not (or
                  (and (neg? dx) (zero? x))
                  (and (neg? dy) (zero? y))
                  (and (pos? dx) (= x (dec width)))
                  (and (pos? dy) (= y (dec height))))
-        (update-positions (+ x dx) (+ y dy))))))
+        (update-positions [(+ x dx) (+ y dy)])))))
 
 (defn draw [ctx x y color]
   (let [[rx ry w h] (point->rect x y)]
@@ -46,8 +51,9 @@
     (.fillRect ctx rx ry w h)
     (.stroke ctx)))
 
-(defn draw-snake [ctx {:keys [x y]}]
-  (draw ctx x y "#fff"))
+(defn draw-snake [ctx {:keys [body]}]
+  (doseq [[x y] body]
+    (draw ctx x y "#fff")))
 
 (defn draw-apple [ctx]
   (let [{:keys [x y color visible]} @apple]
