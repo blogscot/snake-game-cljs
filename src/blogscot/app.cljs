@@ -45,11 +45,3 @@
 
 (defn ^:export init []
   (game))
-
-(comment
-
-  (def canvas (js/document.querySelector "canvas"))
-  (def ctx (.getContext canvas "2d"))
-  (js/console.log canvas)
-
-  nil)
