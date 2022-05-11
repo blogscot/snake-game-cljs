@@ -1,11 +1,10 @@
 (ns blogscot.app
-  (:require [blogscot.snake :refer [draw-snake draw-apple direction generate-apple move! snake game-dimensions]]))
+  (:require [blogscot.snake :refer [draw-snake draw-apple direction generate-apple move! snake game-dimensions game-state
+                                    reset-game!]]))
 
 (def canvas (js/document.querySelector "canvas"))
 (def ctx (.getContext canvas "2d"))
 (def refresh-rate 200) ;; milliseconds
-
-(def bounded-move! (move! game-dimensions))
 
 (defn draw-canvas [{:keys [width height size]}]
   (doto canvas
@@ -17,11 +16,20 @@
   (let [{:keys [width height size]} game-dimensions]
     (.clearRect ctx 0 0 (* width size) (* height size))))
 
-(defn game-loop []
-  (bounded-move! snake)
-  (clear-canvas)
-  (draw-apple ctx)
+(defn display-message []
+  (set! (.-fillStyle ctx) "white")
+  (set! (.-font ctx) "40px Advent Pro")
+  (set! (.-textAlign ctx) "center")
+  (.fillText ctx "Game Over" 300 180)
+  (set! (.-font ctx) "20px Advent Pro")
+  (.fillText ctx "Press 'R' to restart" 300 230))
 
+(defn game-loop []
+  (if (:game-over @game-state)
+    (display-message)
+    (do (move! snake)
+        (clear-canvas)))
+  (draw-apple ctx)
   (draw-snake ctx @snake))
 
 (defn handle-keypress [e]
@@ -30,6 +38,9 @@
     "ArrowDown"  (direction {:dx 0  :dy 1})
     "ArrowLeft"  (direction {:dx -1 :dy 0})
     "ArrowRight" (direction {:dx 1  :dy 0})
+    ("R" "r")    (when (true? (:game-over @game-state))
+                   (reset-game!)
+                   (generate-apple))
     nil))
 
 (defn game []
@@ -39,7 +50,7 @@
    "keyup"
    handle-keypress)
 
-  (generate-apple game-dimensions)
+  (generate-apple)
   (game-loop)
   (js/setInterval game-loop refresh-rate))
 

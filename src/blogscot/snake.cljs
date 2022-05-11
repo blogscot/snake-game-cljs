@@ -2,8 +2,19 @@
 
 (def game-dimensions {:width 60 :height 40 :size 10})
 
-(def snake (atom {:body (list [0 0]) :dx 1 :dy 0}))
-(def apple (atom {:x 0 :y 0 :color "#fff" :visible true}))
+;; Initialisation
+(def game-init {:game-over false})
+(def snake-init {:body (list [2 0] [1 0] [0 0]) :dx 1 :dy 0})
+(def apple-init {:x 0 :y 0 :color "#fff" :visible true})
+
+(def game-state (atom game-init))
+(def snake (atom snake-init))
+(def apple (atom apple-init))
+
+(defn reset-game! []
+  (reset! game-state game-init)
+  (reset! snake snake-init)
+  (reset! apple apple-init))
 
 (defn log [arg]
   (js/console.log (clj->js arg)))
@@ -18,32 +29,39 @@
 (defn apple-eaten? [snake-position]
   (= snake-position ((juxt :x :y) @apple)))
 
-(defn generate-apple [{:keys [width height]}]
-  (let [x (rand-int (dec width))
+(defn generate-apple []
+  (let [{:keys [width height]} game-dimensions
+        x (rand-int (dec width))
         y (rand-int (dec height))
         color (rand-nth ["red" "green"])]
     (swap! apple assoc :x x :y y :color color :visible true)))
+
+(defn hit-wall? []
+  (let [{:keys [body dx dy]} @snake
+        [[x y]] body
+        {:keys [width height]} game-dimensions]
+    (or
+     (and (neg? dx) (zero? x))
+     (and (neg? dy) (zero? y))
+     (and (pos? dx) (= x (dec width)))
+     (and (pos? dy) (= y (dec height))))))
 
 (defn update-positions [[new-x new-y]]
   (if (apple-eaten? [new-x new-y])
     ;; add apple block position as head
     (do (swap! snake update :body conj ((juxt :x :y) @apple))
         (swap! apple assoc :visible false)
-        (js/setTimeout #(generate-apple game-dimensions) (rand-int 3000)))
+        (js/setTimeout #(generate-apple) (rand-int 3000)))
     ;; add new block as head and remove last block
     (let [body (:body @snake)]
-      (swap! snake assoc :body (butlast (conj body [new-x new-y]))))))
+      (if (hit-wall?)
+        (swap! game-state assoc :game-over true)
+        (swap! snake assoc :body (butlast (conj body [new-x new-y])))))))
 
-(defn move! [{:keys [width height]}]
-  (fn [snake]
-    (let [{:keys [body dx dy]} @snake
-          [[x y]] body]
-      (when-not (or
-                 (and (neg? dx) (zero? x))
-                 (and (neg? dy) (zero? y))
-                 (and (pos? dx) (= x (dec width)))
-                 (and (pos? dy) (= y (dec height))))
-        (update-positions [(+ x dx) (+ y dy)])))))
+(defn move! [snake]
+  (let [{:keys [body dx dy]} @snake
+        [[x y]] body]
+    (update-positions [(+ x dx) (+ y dy)])))
 
 (defn draw [ctx x y color]
   (let [[rx ry w h] (point->rect x y)]
