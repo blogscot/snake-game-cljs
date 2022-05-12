@@ -1,6 +1,7 @@
 (ns blogscot.snake)
 
 (def game-dimensions {:width 60 :height 40 :size 10})
+(def game-over-audio (js/Audio. "/audio/game-over.wav"))
 
 ;; Initialisation
 (def game-init {:game-over false})
