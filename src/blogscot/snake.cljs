@@ -78,5 +78,8 @@
     (when (true? visible)
       (draw ctx x y color))))
 
-(defn direction [{:keys [dx dy]}]
-  (swap! snake assoc :dx dx :dy dy))
+(defn direction
+  "Change direction left, right (even forward) but not reverse"
+  [{:keys [dx dy]}]
+  (when-not (= ((juxt :dx :dy) @snake) (map #(* -1 %) [dx dy]))
+    (swap! snake assoc :dx dx :dy dy)))
