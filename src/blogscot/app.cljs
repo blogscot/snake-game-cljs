@@ -4,7 +4,6 @@
 
 (def canvas (js/document.querySelector "canvas"))
 (def ctx (.getContext canvas "2d"))
-(def refresh-rate 200) ;; milliseconds
 
 (defn draw-canvas [{:keys [width height size]}]
   (doto canvas
@@ -30,7 +29,8 @@
     (do (move! snake)
         (clear-canvas)))
   (draw-apple ctx)
-  (draw-snake ctx @snake))
+  (draw-snake ctx @snake)
+  (js/setTimeout game-loop (:refresh-rate @game-state)))
 
 (defn handle-keypress [e]
   (case (-> e .-key)
@@ -38,6 +38,7 @@
     "ArrowDown"  (direction {:dx 0  :dy 1})
     "ArrowLeft"  (direction {:dx -1 :dy 0})
     "ArrowRight" (direction {:dx 1  :dy 0})
+    ("P" "p")    (swap! game-state update :paused not)
     ("R" "r")    (when (true? (:game-over @game-state))
                    (reset-game!)
                    (generate-apple))
@@ -51,8 +52,7 @@
    handle-keypress)
 
   (generate-apple)
-  (game-loop)
-  (js/setInterval game-loop refresh-rate))
+  (game-loop))
 
 (defn ^:export init []
   (game))

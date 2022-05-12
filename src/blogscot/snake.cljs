@@ -4,7 +4,7 @@
 (def game-over-audio (js/Audio. "/audio/game-over.wav"))
 
 ;; Initialisation
-(def game-init {:game-over false})
+(def game-init {:game-over false :paused false :refresh-rate 200})
 (def snake-init {:body (list [2 0] [1 0] [0 0]) :dx 1 :dy 0})
 (def apple-init {:x 0 :y 0 :color "#fff" :visible true})
 
@@ -51,24 +51,31 @@
      (and (pos? dx) (= x (dec width)))
      (and (pos? dy) (= y (dec height))))))
 
+(defn increase-game-speed []
+  (swap! game-state update :refresh-rate dec))
+
 (defn update-positions [[x y]]
   (if (apple-eaten? [x y])
-    ;; add apple block position as head
-    (do (swap! snake update :body conj ((juxt :x :y) @apple))
-        (swap! apple assoc :visible false)
-        (js/setTimeout #(generate-apple) (rand-int 3000)))
-    ;; add new block as head and remove last block
+    (do
+      ;; add apple block position as head
+      (swap! snake update :body conj ((juxt :x :y) @apple))
+      (swap! apple assoc :visible false)
+      (js/setTimeout #(generate-apple) (rand-int 3000))
+      (increase-game-speed))
     (let [body (:body @snake)]
       (if (or (snake-bitten?) (hit-wall?))
         (do
           (.play game-over-audio)
           (swap! game-state assoc :game-over true))
+        ;; add new block as head and remove last block
         (swap! snake assoc :body (butlast (conj body [x y])))))))
 
 (defn move! [snake]
   (let [{:keys [body dx dy]} @snake
+        {:keys [paused]} @game-state
         [[x y]] body]
-    (update-positions [(+ x dx) (+ y dy)])))
+    (when-not paused
+      (update-positions [(+ x dx) (+ y dy)]))))
 
 (defn draw [ctx x y color]
   (let [[rx ry w h] (point->rect x y)]
