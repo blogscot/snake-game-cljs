@@ -36,6 +36,10 @@
         color (rand-nth ["red" "green"])]
     (swap! apple assoc :x x :y y :color color :visible true)))
 
+(defn snake-bitten? []
+  (let [[head & body] (:body @snake)]
+    (some #(= head %) (set body))))
+
 (defn hit-wall? []
   (let [{:keys [body dx dy]} @snake
         [[x y]] body
@@ -46,17 +50,19 @@
      (and (pos? dx) (= x (dec width)))
      (and (pos? dy) (= y (dec height))))))
 
-(defn update-positions [[new-x new-y]]
-  (if (apple-eaten? [new-x new-y])
+(defn update-positions [[x y]]
+  (if (apple-eaten? [x y])
     ;; add apple block position as head
     (do (swap! snake update :body conj ((juxt :x :y) @apple))
         (swap! apple assoc :visible false)
         (js/setTimeout #(generate-apple) (rand-int 3000)))
     ;; add new block as head and remove last block
     (let [body (:body @snake)]
-      (if (hit-wall?)
-        (swap! game-state assoc :game-over true)
-        (swap! snake assoc :body (butlast (conj body [new-x new-y])))))))
+      (if (or (snake-bitten?) (hit-wall?))
+        (do
+          (.play game-over-audio)
+          (swap! game-state assoc :game-over true))
+        (swap! snake assoc :body (butlast (conj body [x y])))))))
 
 (defn move! [snake]
   (let [{:keys [body dx dy]} @snake
