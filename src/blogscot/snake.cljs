@@ -2,6 +2,7 @@
 
 (def game-dimensions {:width 60 :height 40 :size 10})
 (def game-over-audio (js/Audio. "/audio/game-over.wav"))
+(def beep-audio (js/Audio. "/audio/beep.mp3"))
 
 ;; Initialisation
 (def game-init {:running false
@@ -62,6 +63,7 @@
     (do
       ;; add apple block position as head
       (swap! snake update :body conj ((juxt :x :y) @apple))
+      (.play beep-audio)
       (swap! apple assoc :visible false)
       (js/setTimeout #(generate-apple) (rand-int 3000))
       (increase-game-speed))
