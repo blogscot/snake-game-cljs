@@ -4,7 +4,10 @@
 (def game-over-audio (js/Audio. "/audio/game-over.wav"))
 
 ;; Initialisation
-(def game-init {:game-over false :paused false :refresh-rate 200})
+(def game-init {:running false
+                :game-over false
+                :paused false
+                :refresh-rate 200})
 (def snake-init {:body (list [2 0] [1 0] [0 0]) :dx 1 :dy 0})
 (def apple-init {:x 0 :y 0 :color "#fff" :visible true})
 
@@ -13,7 +16,7 @@
 (def apple (atom apple-init))
 
 (defn reset-game! []
-  (reset! game-state game-init)
+  (reset! game-state (merge game-init {:running true}))
   (reset! snake snake-init)
   (reset! apple apple-init))
 

@@ -15,19 +15,28 @@
   (let [{:keys [width height size]} game-dimensions]
     (.clearRect ctx 0 0 (* width size) (* height size))))
 
-(defn display-game-over []
+(defn display-welcome-message []
+  (set! (.-textAlign ctx) "center")
   (set! (.-fillStyle ctx) "white")
   (set! (.-font ctx) "40px Advent Pro")
+  (.fillText ctx "Snake Game" 300 170)
+  (set! (.-font ctx) "20px Advent Pro")
+  (.fillText ctx "Press 'S' to start" 300 220))
+
+(defn display-game-over []
   (set! (.-textAlign ctx) "center")
+  (set! (.-fillStyle ctx) "white")
+  (set! (.-font ctx) "40px Advent Pro")
   (.fillText ctx "Game Over" 300 170)
   (set! (.-font ctx) "20px Advent Pro")
   (.fillText ctx "Press 'R' to restart" 300 220))
 
 (defn game-loop []
-  (if (:game-over @game-state)
-    (display-game-over)
-    (do (move! snake)
-        (clear-canvas)))
+  (cond
+    (not (:running @game-state)) (display-welcome-message)
+    (:game-over @game-state) (display-game-over)
+    :else (do (move! snake)
+              (clear-canvas)))
   (draw-apple ctx)
   (draw-snake ctx @snake)
   (js/setTimeout game-loop (:refresh-rate @game-state)))
@@ -39,6 +48,7 @@
     "ArrowLeft"  (direction {:dx -1 :dy 0})
     "ArrowRight" (direction {:dx 1  :dy 0})
     ("P" "p")    (swap! game-state update :paused not)
+    ("S" "s")    (swap! game-state assoc :running true)
     ("R" "r")    (when (true? (:game-over @game-state))
                    (reset-game!)
                    (generate-apple))
