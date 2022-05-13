@@ -15,21 +15,26 @@
   (let [{:keys [width height size]} game-dimensions]
     (.clearRect ctx 0 0 (* width size) (* height size))))
 
+(defn display-text
+  ([text x y size]
+   (display-text text x y
+                 (condp = size
+                   "large" "40px Advent Pro"
+                   "small" "20px Advent Pro") "white"))
+  ([text x y font color]
+   (set! (.-textAlign ctx) "center")
+   (set! (.-fillStyle ctx) color)
+   (set! (.-font ctx) font)
+   (.fillText ctx text x y)))
+
 (defn display-welcome-message []
-  (set! (.-textAlign ctx) "center")
-  (set! (.-fillStyle ctx) "white")
-  (set! (.-font ctx) "40px Advent Pro")
-  (.fillText ctx "Snake Game" 300 170)
-  (set! (.-font ctx) "20px Advent Pro")
-  (.fillText ctx "Press 'S' to start" 300 220))
+  (display-text "Snake Game" 300 160 "large")
+  (display-text "Use cursor keys to move" 300 200 "small")
+  (display-text "Press 'S' to start" 300 240 "small"))
 
 (defn display-game-over []
-  (set! (.-textAlign ctx) "center")
-  (set! (.-fillStyle ctx) "white")
-  (set! (.-font ctx) "40px Advent Pro")
-  (.fillText ctx "Game Over" 300 170)
-  (set! (.-font ctx) "20px Advent Pro")
-  (.fillText ctx "Press 'R' to restart" 300 220))
+  (display-text "Game Over" 300 170 "large")
+  (display-text "Press 'R' to start" 300 220 "small"))
 
 (defn game-loop []
   (cond
@@ -47,7 +52,7 @@
     "ArrowDown"  (direction {:dx 0  :dy 1})
     "ArrowLeft"  (direction {:dx -1 :dy 0})
     "ArrowRight" (direction {:dx 1  :dy 0})
-    ("P" "p")    (swap! game-state update :paused not)
+    (" ")        (swap! game-state update :paused not)
     ("S" "s")    (swap! game-state assoc :running true)
     ("R" "r")    (when (true? (:game-over @game-state))
                    (reset-game!)
