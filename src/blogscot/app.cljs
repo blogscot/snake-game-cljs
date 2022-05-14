@@ -1,6 +1,5 @@
 (ns blogscot.app
-  (:require [blogscot.snake :refer [draw-snake draw-apple direction generate-apple move! snake game-dimensions game-state
-                                    reset-game!]]))
+  (:require [blogscot.snake :refer [draw-snake draw-apple direction generate-apple move! snake game-dimensions game-state reset-game!]]))
 
 (def canvas (js/document.querySelector "canvas"))
 (def ctx (.getContext canvas "2d"))
@@ -28,6 +27,7 @@
    (.fillText ctx text x y)))
 
 (defn display-welcome-message []
+  (clear-canvas)
   (display-text "Snake Game" 300 160 "large")
   (display-text "Use cursor keys to move" 300 200 "small")
   (display-text "Press 'S' to start" 300 240 "small"))
@@ -70,4 +70,4 @@
   (game-loop))
 
 (defn ^:export init []
-  (game))
+  (js/setTimeout game 300))
