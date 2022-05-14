@@ -36,8 +36,11 @@
                  ["Press Space to start" 300 240 "small"]]))
 
 (defn display-game-over []
-  (display-text [["Game Over" 300 170 "large"]
-                 ["Press 'R' to replay" 300 220 "small"]]))
+  (let [apples-eaten (-> @snake :body count (- 3))
+        text (str "Apples Eaten: " apples-eaten)]
+    (display-text [[text 510 20 "small"]
+                   ["Game Over" 300 170 "large"]
+                   ["Press 'R' to replay" 300 220 "small"]])))
 
 (defn display-paused []
   (display-text "Paused" 40 20 "small"))
@@ -80,4 +83,5 @@
   (game-loop))
 
 (defn ^:export init []
+  ;; give external fonts time to load
   (js/setTimeout game 300))
