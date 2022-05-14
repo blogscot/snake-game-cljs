@@ -1,6 +1,9 @@
 (ns blogscot.snake)
 
 (def game-dimensions {:width 60 :height 40 :size 10})
+(def alive-color "#fff")
+(def dead-color "#dd0000")
+
 (def game-over-audio (js/Audio. "/audio/game-over.wav"))
 (def beep-audio (js/Audio. "/audio/beep.mp3"))
 
@@ -9,7 +12,10 @@
                 :game-over false
                 :paused false
                 :refresh-rate 200})
-(def snake-init {:body (list [2 0] [1 0] [0 0]) :dx 1 :dy 0})
+(def snake-init {:body (list [2 0] [1 0] [0 0])
+                 :dx 1
+                 :dy 0
+                 :color alive-color})
 (def apple-init {:x 0 :y 0 :color "#fff" :visible true})
 
 (def game-state (atom game-init))
@@ -71,7 +77,8 @@
       (if (or (snake-bitten?) (hit-wall?))
         (do
           (.play game-over-audio)
-          (swap! game-state assoc :game-over true))
+          (swap! game-state assoc :game-over true)
+          (swap! snake assoc :color dead-color))
         ;; add new block as head and remove last block
         (swap! snake assoc :body (butlast (conj body [x y])))))))
 
@@ -88,9 +95,9 @@
     (.fillRect ctx rx ry w h)
     (.stroke ctx)))
 
-(defn draw-snake [ctx {:keys [body]}]
+(defn draw-snake [ctx {:keys [body color]}]
   (doseq [[x y] body]
-    (draw ctx x y "#fff")))
+    (draw ctx x y color)))
 
 (defn draw-apple [ctx]
   (let [{:keys [x y color visible]} @apple]
