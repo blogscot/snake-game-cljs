@@ -15,6 +15,9 @@
     (.clearRect ctx 0 0 (* width size) (* height size))))
 
 (defn display-text
+  ([coll]
+   (doseq [[text x y size] coll]
+     (display-text text x y size)))
   ([text x y size]
    (display-text text x y
                  (condp = size
@@ -28,20 +31,25 @@
 
 (defn display-welcome-message []
   (clear-canvas)
-  (display-text "Snake Game" 300 160 "large")
-  (display-text "Use cursor keys to move" 300 200 "small")
-  (display-text "Press 'S' to start" 300 240 "small"))
+  (display-text [["Snake Game" 300 160 "large"]
+                 ["Use cursor keys to move" 300 200 "small"]
+                 ["Press Space to start" 300 240 "small"]]))
 
 (defn display-game-over []
-  (display-text "Game Over" 300 170 "large")
-  (display-text "Press 'R' to start" 300 220 "small"))
+  (display-text [["Game Over" 300 170 "large"]
+                 ["Press 'R' to replay" 300 220 "small"]]))
+
+(defn display-paused []
+  (display-text "Paused" 40 20 "small"))
 
 (defn game-loop []
-  (cond
-    (not (:running @game-state)) (display-welcome-message)
-    (:game-over @game-state) (display-game-over)
-    :else (do (move! snake)
-              (clear-canvas)))
+  (let [{:keys [game-over paused running]} @game-state]
+    (cond
+      (not running)        (display-welcome-message)
+      game-over            (display-game-over)
+      (and running paused) (display-paused)
+      :else (do (move! snake)
+                (clear-canvas))))
   (draw-apple ctx)
   (draw-snake ctx @snake)
   (js/setTimeout game-loop (:refresh-rate @game-state)))
@@ -52,8 +60,10 @@
     "ArrowDown"  (direction {:dx 0  :dy 1})
     "ArrowLeft"  (direction {:dx -1 :dy 0})
     "ArrowRight" (direction {:dx 1  :dy 0})
-    (" ")        (swap! game-state update :paused not)
-    ("S" "s")    (swap! game-state assoc :running true)
+    (" ")        (cond
+                   (:running @game-state)
+                   (swap! game-state update :paused not)
+                   :else (swap! game-state assoc :running true))
     ("R" "r")    (when (true? (:game-over @game-state))
                    (reset-game!)
                    (generate-apple))
