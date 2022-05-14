@@ -1,5 +1,5 @@
 (ns blogscot.app
-  (:require [blogscot.snake :refer [draw-snake draw-apple direction generate-apple move! snake game-dimensions game-state reset-game!]]))
+  (:require [blogscot.snake :refer [draw-snake draw-apple direction generate-apple move! snake game-dimensions game-state reset-game! get-highscore get-apples-eaten]]))
 
 (def canvas (js/document.querySelector "canvas"))
 (def ctx (.getContext canvas "2d"))
@@ -36,9 +36,11 @@
                  ["Press Space to start" 300 240 "small"]]))
 
 (defn display-game-over []
-  (let [apples-eaten (-> @snake :body count (- 3))
-        text (str "Apples Eaten: " apples-eaten)]
-    (display-text [[text 510 20 "small"]
+  (let [apples-eaten (get-apples-eaten)
+        text (str "Apples Eaten: " apples-eaten)
+        highscore (get-highscore)]
+    (display-text [[text 80 20 "small"]
+                   [(str "Highscore: " highscore) 530 20 "small"]
                    ["Game Over" 300 170 "large"]
                    ["Press 'R' to replay" 300 220 "small"]])))
 

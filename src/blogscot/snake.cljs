@@ -3,6 +3,7 @@
 (def game-dimensions {:width 60 :height 40 :size 10})
 (def alive-color "#fff")
 (def dead-color "#dd0000")
+(def storage-key "apples-eaten")
 
 (def game-over-audio (js/Audio. "/audio/game-over.wav"))
 (def beep-audio (js/Audio. "/audio/beep.mp3"))
@@ -64,6 +65,16 @@
 (defn increase-game-speed []
   (swap! game-state update :refresh-rate dec))
 
+(defn get-apples-eaten []
+  (-> @snake :body count (- 3)))
+
+(defn get-highscore []
+  (or (.getItem js/localStorage storage-key) 0))
+
+(defn save-highscore [apples-eaten]
+  (when (> apples-eaten (get-highscore))
+    (.setItem js/localStorage storage-key apples-eaten)))
+
 (defn update-positions [[x y]]
   (if (apple-eaten? [x y])
     (do
@@ -78,7 +89,8 @@
         (do
           (.play game-over-audio)
           (swap! game-state assoc :game-over true)
-          (swap! snake assoc :color dead-color))
+          (swap! snake assoc :color dead-color)
+          (save-highscore (get-apples-eaten)))
         ;; add new block as head and remove last block
         (swap! snake assoc :body (butlast (conj body [x y])))))))
 
