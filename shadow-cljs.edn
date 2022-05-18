@@ -3,7 +3,7 @@
  ["src"]
 
  :dependencies
- []
+ [[com.taoensso/timbre "5.2.1"]]
 
  :dev-http {8080 "public"}
 

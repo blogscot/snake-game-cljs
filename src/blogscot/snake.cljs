@@ -1,4 +1,5 @@
-(ns blogscot.snake)
+(ns blogscot.snake
+  #_(:require [taoensso.timbre :refer [log]]))
 
 (def game-dimensions {:width 60 :height 40 :size 10})
 (def alive-color "#fff")
@@ -27,9 +28,6 @@
   (reset! game-state (merge game-init {:running true}))
   (reset! snake snake-init)
   (reset! apple apple-init))
-
-(defn log [arg]
-  (js/console.log (clj->js arg)))
 
 (defn point->rect
   "Converts a [x y] point into a screen rectangle 
