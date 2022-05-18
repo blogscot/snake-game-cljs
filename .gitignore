@@ -25,3 +25,4 @@ pom.xml.asc
 output.calva-repl
 resources/
 test/
+Notes.md
