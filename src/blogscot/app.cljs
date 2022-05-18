@@ -53,9 +53,10 @@
       game-over            (display-game-over)
       (and running paused) (display-paused)
       :else (do (s/move! s/snake)
-                (clear-canvas))))
-  (s/draw-apple ctx)
-  (s/draw-snake ctx @s/snake)
+                (clear-canvas)))
+    (when running
+      (s/draw-apple ctx)
+      (s/draw-snake ctx @s/snake)))
   (js/setTimeout game-loop (:refresh-rate @s/game-state)))
 
 (defn handle-keypress [e]
