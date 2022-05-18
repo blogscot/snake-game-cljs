@@ -21,8 +21,8 @@
   ([text x y size]
    (display-text text x y
                  (condp = size
-                   "large" "40px Advent Pro"
-                   "small" "20px Advent Pro") "white"))
+                   "large" "40px Aldrich"
+                   "small" "16px Aldrich") "white"))
   ([text x y font color]
    (set! (.-textAlign ctx) "center")
    (set! (.-fillStyle ctx) color)
