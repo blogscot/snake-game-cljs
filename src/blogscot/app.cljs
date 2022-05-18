@@ -1,5 +1,5 @@
 (ns blogscot.app
-  (:require [blogscot.snake :refer [draw-snake draw-apple direction generate-apple move! snake game-dimensions game-state reset-game! get-highscore get-apples-eaten]]))
+  (:require [blogscot.snake :as s]))
 
 (def canvas (js/document.querySelector "canvas"))
 (def ctx (.getContext canvas "2d"))
@@ -11,7 +11,7 @@
     (#(set! (.-style %) "background-color: #333"))))
 
 (defn clear-canvas []
-  (let [{:keys [width height size]} game-dimensions]
+  (let [{:keys [width height size]} s/game-dimensions]
     (.clearRect ctx 0 0 (* width size) (* height size))))
 
 (defn display-text
@@ -36,9 +36,8 @@
                  ["Press Space to start" 300 240 "small"]]))
 
 (defn display-game-over []
-  (let [apples-eaten (get-apples-eaten)
-        text (str "Apples Eaten: " apples-eaten)
-        highscore (get-highscore)]
+  (let [text (str "Apples Eaten: " (s/get-apples-eaten))
+        highscore (s/get-highscore)]
     (display-text [[text 80 20 "small"]
                    [(str "Highscore: " highscore) 530 20 "small"]
                    ["Game Over" 300 170 "large"]
@@ -48,40 +47,40 @@
   (display-text "Paused" 40 20 "small"))
 
 (defn game-loop []
-  (let [{:keys [game-over paused running]} @game-state]
+  (let [{:keys [game-over paused running]} @s/game-state]
     (cond
       (not running)        (display-welcome-message)
       game-over            (display-game-over)
       (and running paused) (display-paused)
-      :else (do (move! snake)
+      :else (do (s/move! s/snake)
                 (clear-canvas))))
-  (draw-apple ctx)
-  (draw-snake ctx @snake)
-  (js/setTimeout game-loop (:refresh-rate @game-state)))
+  (s/draw-apple ctx)
+  (s/draw-snake ctx @s/snake)
+  (js/setTimeout game-loop (:refresh-rate @s/game-state)))
 
 (defn handle-keypress [e]
   (case (-> e .-key)
-    "ArrowUp"    (direction {:dx 0  :dy -1})
-    "ArrowDown"  (direction {:dx 0  :dy 1})
-    "ArrowLeft"  (direction {:dx -1 :dy 0})
-    "ArrowRight" (direction {:dx 1  :dy 0})
+    "ArrowUp"    (s/direction {:dx 0  :dy -1})
+    "ArrowDown"  (s/direction {:dx 0  :dy 1})
+    "ArrowLeft"  (s/direction {:dx -1 :dy 0})
+    "ArrowRight" (s/direction {:dx 1  :dy 0})
     (" ")        (cond
-                   (:running @game-state)
-                   (swap! game-state update :paused not)
-                   :else (swap! game-state assoc :running true))
-    ("R" "r")    (when (true? (:game-over @game-state))
-                   (reset-game!)
-                   (generate-apple))
+                   (:running @s/game-state)
+                   (swap! s/game-state update :paused not)
+                   :else (swap! s/game-state assoc :running true))
+    ("R" "r")    (when (true? (:game-over @s/game-state))
+                   (s/reset-game!)
+                   (s/generate-apple))
     nil))
 
 (defn game []
-  (draw-canvas game-dimensions)
+  (draw-canvas s/game-dimensions)
 
   (js/document.addEventListener
    "keyup"
    handle-keypress)
 
-  (generate-apple)
+  (s/generate-apple)
   (game-loop))
 
 (defn ^:export init []
