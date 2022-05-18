@@ -2,7 +2,16 @@
 
 The classic snake game written in Clojurescript using Shadow.cljs.
 
+## Playing the Game
+
+You can play the [game here](https://cheerful-eclair-0dcc03.netlify.app/).
+
+![Snake Game](snake-game.png)
+
+
 ## Run in Development Mode
+
+My personal development setup is to use VSCode with Calva and `Start a Project REPL` choosing project-type `shadow-cljs` with the `:frontend` build. On the command line you can type:
 
 ```
 npx shadow-cljs watch :frontend
